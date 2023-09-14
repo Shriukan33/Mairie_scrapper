@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from webdriver_manager.chrome import ChromeDriverManager
@@ -41,27 +43,32 @@ url_mairie = "https://rdv-accueil.bordeaux.fr/"
 # initialisation Selenium
 options = Options()
 # options.add_argument("--headless")
-# options.add_argument("--disable-extensions")
-browser= WebDriver(ChromeDriverManager().install(),
+options.add_argument("--disable-extensions")
+service = Service(ChromeDriverManager().install())
+browser= WebDriver(service=service,
                    options=options)
 browser.implicitly_wait(5)
 
 # Browsing
 found = False
 browser.get(url_mairie)
-browser.find_element_by_xpath('//*[@id="nextButtonId"]').click()
-Select(browser.find_element_by_xpath(
-    '/html/body/div[4]/div/div/div/main/div/div[3]/div/div/form/div/div[2]/div/div[3]/div[2]/div[3]/select')
+browser.find_element("xpath", '//*[@id="nextButtonId"]').click()
+Select(
+    browser.find_element(
+        "xpath",
+        # Quantité "Rendez-vous Carte Nationale d'Identité (CNI)"
+        '/html/body/div[4]/div/div/div/main/div/div[3]/div/div/form/div/div[2]/div/div[1]/div[3]/div[3]/select')
     ).select_by_visible_text('1')
-browser.find_element_by_xpath('//*[@id="nextButtonId"]').click()
-Select(browser.find_element_by_xpath('//select[@id="ISiteBeanKeySelect"]')).select_by_visible_text('MAIRIE DE CAUDERAN')
+
+browser.find_element("xpath", '//*[@id="nextButtonId"]').click()
+Select(browser.find_element("xpath", '//select[@id="ISiteBeanKeySelect"]')).select_by_visible_text('MAIRIE DE CAUDERAN')
 try:
-    found = EC.presence_of_all_elements_located(browser.find_element_by_class_name('ui-state-active'))
+    found = EC.presence_of_all_elements_located(browser.find_element(By.CSS_SELECTOR, 'a.ui-state-default'))
 except NoSuchElementException:
-    browser.find_element_by_class_name('ui-icon-circle-triangle-e').click()
+    browser.find_element(By.CLASS_NAME,'ui-icon-circle-triangle-e').click()
     time.sleep(1)
     try:
-        found = EC.presence_of_all_elements_located(browser.find_element_by_class_name('ui-state-active'))
+        found = EC.presence_of_all_elements_located(browser.find_element(By.CSS_SELECTOR, 'a.ui-state-default'))
     except NoSuchElementException:
         print("No date found")
 
